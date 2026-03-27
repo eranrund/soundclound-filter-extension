@@ -95,3 +95,19 @@ test('does not re-collapse a user-revealed track (scf-shown)', () => {
 
   assert.ok(!el.classList.contains('scf-collapsed'), 'user-revealed track should not be re-collapsed');
 });
+
+test('show-button click restores element and adds scf-shown class', () => {
+  const dom = new JSDOM('<!DOCTYPE html><body></body>');
+  const { applyFilter } = loadFilter(dom);
+  const el = makeTrackElement(dom);
+  const originalHTML = el.innerHTML;
+
+  applyFilter(el, 60_000, 300_000); // collapse the track
+  const btn = el.querySelector('.scf-show-btn');
+  btn.dispatchEvent(new dom.window.MouseEvent('click', { bubbles: true }));
+
+  assert.ok(!el.classList.contains('scf-collapsed'), 'element should not have scf-collapsed class after click');
+  assert.ok(el.classList.contains('scf-shown'), 'element should have scf-shown class after click');
+  assert.ok(!el.querySelector('.scf-placeholder'), 'placeholder should be removed from innerHTML');
+  assert.equal(el.innerHTML, originalHTML, 'original HTML should be fully restored');
+});

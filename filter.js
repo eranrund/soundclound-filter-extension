@@ -51,12 +51,9 @@ function applyFilter(element, durationMs, thresholdMs) {
 
   } else if (!shouldCollapse && isCollapsed) {
     // Restore original content when threshold drops below track duration
-    // but only if user hasn't already revealed it
-    if (!element.classList.contains('scf-shown')) {
-      element.innerHTML = element.dataset.scfOriginal;
-      element.classList.remove('scf-collapsed');
-      delete element.dataset.scfOriginal;
-    }
+    element.innerHTML = element.dataset.scfOriginal;
+    element.classList.remove('scf-collapsed');
+    delete element.dataset.scfOriginal;
   }
 }
 
