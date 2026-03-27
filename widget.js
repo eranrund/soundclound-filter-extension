@@ -14,7 +14,8 @@
     </div>
     <div class="scf-count" id="scf-count"></div>
   `;
-  document.body.appendChild(widget);
+  const target = document.body ?? document.documentElement;
+  target.appendChild(widget);
 
   const slider = document.getElementById('scf-slider');
   const valueLabel = document.getElementById('scf-value');
@@ -52,8 +53,14 @@
   const handle = document.getElementById('scf-drag-handle');
   let dragging = false;
   let startX, startY, startRight, startBottom;
+  let dragController = null;
 
   handle.addEventListener('mousedown', (e) => {
+    // Abort any previous drag listeners
+    if (dragController) dragController.abort();
+    dragController = new AbortController();
+    const signal = dragController.signal;
+
     dragging = true;
     startX = e.clientX;
     startY = e.clientY;
@@ -61,9 +68,12 @@
     startRight = window.innerWidth - rect.right;
     startBottom = window.innerHeight - rect.bottom;
     e.preventDefault();
+
+    document.addEventListener('mousemove', onMouseMove, { signal });
+    document.addEventListener('mouseup', onMouseUp, { signal });
   });
 
-  document.addEventListener('mousemove', (e) => {
+  function onMouseMove(e) {
     if (!dragging) return;
     const dx = startX - e.clientX;
     const dy = startY - e.clientY;
@@ -71,11 +81,15 @@
     widget.style.bottom = `${Math.max(0, startBottom + dy)}px`;
     widget.style.left = 'auto';
     widget.style.top = 'auto';
-  });
+  }
 
-  document.addEventListener('mouseup', () => {
+  function onMouseUp() {
     if (!dragging) return;
     dragging = false;
+    if (dragController) {
+      dragController.abort();
+      dragController = null;
+    }
     const rect = widget.getBoundingClientRect();
     chrome.storage.local.set({
       [STORAGE_KEY_POSITION]: {
@@ -83,5 +97,5 @@
         bottom: Math.round(window.innerHeight - rect.bottom),
       },
     });
-  });
+  }
 })();
