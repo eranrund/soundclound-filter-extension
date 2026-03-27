@@ -8,6 +8,7 @@
 
   const durationMap = new Map(); // trackId (number) → durationMs
   let thresholdMs = DEFAULT_THRESHOLD_MIN * 60_000;
+  let activeObserver = null;
 
   // Load persisted threshold on startup
   chrome.storage.local.get(STORAGE_KEY, (result) => {
@@ -46,7 +47,7 @@
       return;
     }
 
-    const observer = new MutationObserver((mutations) => {
+    activeObserver = new MutationObserver((mutations) => {
       for (const mutation of mutations) {
         for (const node of mutation.addedNodes) {
           if (node.nodeType !== Node.ELEMENT_NODE) continue;
@@ -60,7 +61,7 @@
       updateCount();
     });
 
-    observer.observe(container, { childList: true, subtree: true });
+    activeObserver.observe(container, { childList: true, subtree: true });
     applyFilterToAll();
   }
 
@@ -78,7 +79,9 @@
   function getTrackId(node) {
     // data-sc-item-id on the list item, or data-item-id on the inner article
     const raw = node.dataset.scItemId ?? node.querySelector('article')?.dataset.itemId;
-    return raw != null ? Number(raw) : null;
+    if (raw == null || raw === '') return null;
+    const n = Number(raw);
+    return Number.isNaN(n) ? null : n;
   }
 
   function updateCount() {
@@ -87,4 +90,12 @@
   }
 
   setupObserver(MAX_RETRIES);
+
+  // Disconnect observer when navigating away from /feed (SoundCloud is an SPA)
+  window.navigation?.addEventListener('navigate', (event) => {
+    if (!event.destination.url.includes('/feed')) {
+      activeObserver?.disconnect();
+      activeObserver = null;
+    }
+  });
 })();
