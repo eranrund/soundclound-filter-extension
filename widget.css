@@ -1,0 +1,116 @@
+/* SoundCloud Feed Filter — all classes namespaced with scf- */
+
+.scf-widget {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 9999;
+  background: rgba(15, 15, 15, 0.92);
+  border: 1px solid #333;
+  border-radius: 10px;
+  padding: 12px 16px;
+  min-width: 220px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  user-select: none;
+  cursor: default;
+}
+
+.scf-widget-header {
+  color: #888;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  cursor: grab;
+}
+
+.scf-widget-header:active {
+  cursor: grabbing;
+}
+
+.scf-slider-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.scf-slider {
+  flex: 1;
+  accent-color: #ff5500;
+  cursor: pointer;
+}
+
+.scf-value {
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  min-width: 34px;
+  text-align: right;
+}
+
+.scf-count {
+  color: #555;
+  font-size: 10px;
+  margin-top: 7px;
+  text-align: right;
+}
+
+/* Collapsed track placeholder */
+.scf-collapsed {
+  border-bottom: 1px solid #1a1a1a;
+}
+
+.scf-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  background: #111;
+}
+
+.scf-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow: hidden;
+}
+
+.scf-play-icon {
+  color: #333;
+  font-size: 10px;
+  flex-shrink: 0;
+}
+
+.scf-meta {
+  color: #444;
+  font-size: 12px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.scf-duration {
+  color: #333;
+  font-size: 11px;
+  flex-shrink: 0;
+}
+
+.scf-show-btn {
+  background: none;
+  border: none;
+  color: #ff5500;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 2px 4px;
+  flex-shrink: 0;
+  font-family: inherit;
+}
+
+.scf-show-btn:hover {
+  color: #ff7733;
+}
