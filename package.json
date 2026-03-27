@@ -1,5 +1,6 @@
 {
   "name": "soundcloud-feed-filter",
+  "type": "module",
   "private": true,
   "scripts": {
     "test": "node --test tests/filter.test.js"
