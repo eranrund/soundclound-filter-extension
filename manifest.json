@@ -1,0 +1,25 @@
+{
+  "manifest_version": 3,
+  "name": "SoundCloud Feed Filter",
+  "version": "0.1.0",
+  "description": "Hide short tracks from your SoundCloud feed",
+  "permissions": ["storage"],
+  "host_permissions": [
+    "https://soundcloud.com/*",
+    "https://api-v2.soundcloud.com/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["https://soundcloud.com/feed*"],
+      "js": ["interceptor.js"],
+      "world": "MAIN",
+      "run_at": "document_start"
+    },
+    {
+      "matches": ["https://soundcloud.com/feed*"],
+      "js": ["filter.js", "widget.js", "content.js"],
+      "css": ["widget.css"],
+      "run_at": "document_idle"
+    }
+  ]
+}
