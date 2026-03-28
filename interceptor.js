@@ -31,10 +31,15 @@
     const map = {};
     const collection = json?.collection ?? [];
     for (const item of collection) {
-      // SoundCloud wraps tracks as: { type: 'track', track: { id, duration, ... } }
+      // SoundCloud wraps tracks as: { type: 'track-repost'|'track', track: { duration, permalink_url, ... } }
       const track = item?.track ?? (item?.type === 'track' ? item : null);
-      if (track?.id != null && track?.duration != null) {
-        map[track.id] = track.duration; // duration is in milliseconds
+      if (track?.duration != null && track?.permalink_url) {
+        try {
+          const key = new URL(track.permalink_url).pathname; // e.g. "/imzeropoint/rock-your-body-flip"
+          map[key] = track.duration; // duration is in milliseconds
+        } catch {
+          // Skip if permalink_url is not a valid URL
+        }
       }
     }
     return map;

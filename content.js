@@ -6,7 +6,7 @@
   const MAX_RETRIES = 3;
   const RETRY_INTERVAL_MS = 500;
 
-  const durationMap = new Map(); // trackId (number) → durationMs
+  const durationMap = new Map(); // permalink path (string) → durationMs
   let thresholdMs = DEFAULT_THRESHOLD_MIN * 60_000;
   let activeObserver = null;
 
@@ -30,7 +30,7 @@
     if (event.source !== window) return;
     if (event.data?.type !== 'SCF_DURATION_MAP') return;
     for (const [id, ms] of Object.entries(event.data.data)) {
-      durationMap.set(Number(id), ms);
+      durationMap.set(id, ms);
     }
     applyFilterToAll();
   });
@@ -66,9 +66,9 @@
   }
 
   function filterNode(node) {
-    const trackId = getTrackId(node);
-    if (trackId == null) return;
-    applyFilter(node, durationMap.get(trackId), thresholdMs);
+    const permalink = getTrackPermalink(node);
+    if (permalink == null) return;
+    applyFilter(node, durationMap.get(permalink), thresholdMs);
   }
 
   function applyFilterToAll() {
@@ -76,12 +76,10 @@
     updateCount();
   }
 
-  function getTrackId(node) {
-    // data-sc-item-id on the list item, or data-item-id on the inner article
-    const raw = node.dataset.scItemId ?? node.querySelector('article')?.dataset.itemId;
-    if (raw == null || raw === '') return null;
-    const n = Number(raw);
-    return Number.isNaN(n) ? null : n;
+  function getTrackPermalink(node) {
+    const href = node.querySelector('a.soundTitle__title')?.getAttribute('href');
+    if (!href) return null;
+    return href; // e.g. "/imzeropoint/rock-your-body-flip"
   }
 
   function updateCount() {
