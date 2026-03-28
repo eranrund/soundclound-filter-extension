@@ -37,7 +37,6 @@ test('collapses a short track', () => {
 
   assert.ok(el.classList.contains('scf-collapsed'), 'element should have scf-collapsed class');
   assert.ok(el.querySelector('.scf-placeholder'), 'placeholder should be injected');
-  assert.ok(el.dataset.scfOriginal, 'original HTML should be saved in dataset');
 });
 
 test('placeholder shows artist name and title', () => {

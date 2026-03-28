@@ -47,7 +47,7 @@ function _collapse(element, durationMs) {
   }
 
   // Append placeholder as a sibling to the hidden originals
-  const placeholder = document.createElement('div');
+  const placeholder = element.ownerDocument.createElement('div');
   placeholder.className = 'scf-placeholder';
   placeholder.innerHTML = `
     <span class="scf-info">
@@ -72,6 +72,7 @@ function _restoreCollapsed(element) {
   element.querySelector('.scf-placeholder')?.remove();
   for (const child of element.children) {
     child.style.display = '';
+    if (child.getAttribute('style') === '') child.removeAttribute('style');
   }
   element.classList.remove('scf-collapsed');
 }
