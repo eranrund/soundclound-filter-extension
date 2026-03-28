@@ -68,6 +68,7 @@
   function filterNode(node) {
     const permalink = getTrackPermalink(node);
     if (permalink == null) return;
+    // applyFilter is defined in filter.js, which is loaded before content.js (see manifest.json)
     applyFilter(node, durationMap.get(permalink), thresholdMs);
   }
 
@@ -79,7 +80,11 @@
   function getTrackPermalink(node) {
     const href = node.querySelector('a.soundTitle__title')?.getAttribute('href');
     if (!href) return null;
-    return href; // e.g. "/imzeropoint/rock-your-body-flip"
+    try {
+      return new URL(href, 'https://soundcloud.com').pathname;
+    } catch {
+      return null;
+    }
   }
 
   function updateCount() {
