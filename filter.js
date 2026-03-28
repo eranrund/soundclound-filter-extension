@@ -32,22 +32,8 @@ function applyFilter(element, durationMs, thresholdMs, mode) {
   }
 }
 
-function _restoreCollapsed(element) {
-  if (!element.classList.contains('scf-collapsed')) return;
-  element.innerHTML = element.dataset.scfOriginal;
-  element.classList.remove('scf-collapsed');
-  delete element.dataset.scfOriginal;
-}
-
-function _restoreRemoved(element) {
-  if (!element.classList.contains('scf-removed')) return;
-  element.style.display = '';
-  element.classList.remove('scf-removed');
-}
-
 function _collapse(element, durationMs) {
-  element.dataset.scfOriginal = element.innerHTML;
-
+  // Read metadata BEFORE hiding — selectors still work on visible DOM
   const artistEl = element.querySelector('.soundTitle__username');
   const titleEl = element.querySelector('.soundTitle__title');
   const durationEl = element.querySelector('.sc-duration');
@@ -55,25 +41,45 @@ function _collapse(element, durationMs) {
   const title = titleEl ? titleEl.textContent.trim() : 'Unknown';
   const duration = durationEl ? durationEl.textContent.trim() : formatDuration(durationMs);
 
-  element.innerHTML = `
-    <div class="scf-placeholder">
-      <span class="scf-info">
-        <span class="scf-play-icon">▶</span>
-        <span class="scf-meta">${escapeHtml(artist)} — ${escapeHtml(title)}</span>
-        <span class="scf-duration">${escapeHtml(duration)}</span>
-      </span>
-      <button class="scf-show-btn" type="button">show</button>
-    </div>
+  // Hide original children in-place (preserves canvas pixels and JS state)
+  for (const child of element.children) {
+    child.style.display = 'none';
+  }
+
+  // Append placeholder as a sibling to the hidden originals
+  const placeholder = document.createElement('div');
+  placeholder.className = 'scf-placeholder';
+  placeholder.innerHTML = `
+    <span class="scf-info">
+      <span class="scf-play-icon">▶</span>
+      <span class="scf-meta">${escapeHtml(artist)} — ${escapeHtml(title)}</span>
+      <span class="scf-duration">${escapeHtml(duration)}</span>
+    </span>
+    <button class="scf-show-btn" type="button">show</button>
   `;
+  element.appendChild(placeholder);
   element.classList.add('scf-collapsed');
 
-  element.querySelector('.scf-show-btn').addEventListener('click', (e) => {
+  placeholder.querySelector('.scf-show-btn').addEventListener('click', (e) => {
     e.stopPropagation();
-    element.innerHTML = element.dataset.scfOriginal;
-    element.classList.remove('scf-collapsed');
+    _restoreCollapsed(element);
     element.classList.add('scf-shown');
-    delete element.dataset.scfOriginal;
   });
+}
+
+function _restoreCollapsed(element) {
+  if (!element.classList.contains('scf-collapsed')) return;
+  element.querySelector('.scf-placeholder')?.remove();
+  for (const child of element.children) {
+    child.style.display = '';
+  }
+  element.classList.remove('scf-collapsed');
+}
+
+function _restoreRemoved(element) {
+  if (!element.classList.contains('scf-removed')) return;
+  element.style.display = '';
+  element.classList.remove('scf-removed');
 }
 
 function formatDuration(ms) {
