@@ -1,6 +1,8 @@
 (function () {
   const STORAGE_KEY = 'minDurationMinutes';
+  const STORAGE_KEY_MODE = 'filterMode';
   const DEFAULT_THRESHOLD_MIN = 5;
+  const DEFAULT_MODE = 'collapse';
   const FEED_SELECTOR = '#content .lazyLoadingList';
   const TRACK_SELECTOR = '.soundList__item';
   const MAX_RETRIES = 3;
@@ -8,18 +10,25 @@
 
   const durationMap = new Map(); // permalink path (string) → durationMs
   let thresholdMs = DEFAULT_THRESHOLD_MIN * 60_000;
+  let filterMode = DEFAULT_MODE;
   let activeObserver = null;
 
-  // Load persisted threshold on startup
-  chrome.storage.local.get(STORAGE_KEY, (result) => {
+  // Load persisted threshold and mode on startup
+  chrome.storage.local.get([STORAGE_KEY, STORAGE_KEY_MODE], (result) => {
     thresholdMs = (result[STORAGE_KEY] ?? DEFAULT_THRESHOLD_MIN) * 60_000;
+    filterMode = result[STORAGE_KEY_MODE] ?? DEFAULT_MODE;
     applyFilterToAll();
   });
 
-  // Re-filter when user moves the slider (widget.js writes to storage)
+  // Re-filter when user moves the slider or changes mode (widget.js writes to storage)
   chrome.storage.onChanged.addListener((changes) => {
     if (changes[STORAGE_KEY]) {
       thresholdMs = changes[STORAGE_KEY].newValue * 60_000;
+    }
+    if (changes[STORAGE_KEY_MODE]) {
+      filterMode = changes[STORAGE_KEY_MODE].newValue;
+    }
+    if (changes[STORAGE_KEY] || changes[STORAGE_KEY_MODE]) {
       applyFilterToAll();
     }
   });
@@ -69,7 +78,7 @@
     const permalink = getTrackPermalink(node);
     if (permalink == null) return;
     // applyFilter is defined in filter.js, which is loaded before content.js (see manifest.json)
-    applyFilter(node, durationMap.get(permalink), thresholdMs);
+    applyFilter(node, durationMap.get(permalink), thresholdMs, filterMode);
   }
 
   function applyFilterToAll() {
@@ -88,7 +97,7 @@
   }
 
   function updateCount() {
-    const count = document.querySelectorAll('.scf-collapsed').length;
+    const count = document.querySelectorAll('.scf-collapsed, .scf-removed').length;
     window.dispatchEvent(new CustomEvent('scf:count', { detail: { count } }));
   }
 

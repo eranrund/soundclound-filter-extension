@@ -1,60 +1,79 @@
-function applyFilter(element, durationMs, thresholdMs) {
-  // Fail open: never hide a track without a confirmed duration
-  if (durationMs == null) return;
+function applyFilter(element, durationMs, thresholdMs, mode) {
+  if (mode === undefined) mode = 'collapse';
 
-  // Don't re-collapse a track the user explicitly revealed
+  // User explicitly revealed this track — restore any filtered state and leave it alone
   if (element.classList.contains('scf-shown')) {
-    // Clean up any collapsed state if present
-    if (element.classList.contains('scf-collapsed')) {
-      element.innerHTML = element.dataset.scfOriginal;
-      element.classList.remove('scf-collapsed');
-      delete element.dataset.scfOriginal;
-    }
+    _restoreCollapsed(element);
+    _restoreRemoved(element);
     return;
   }
 
-  const shouldCollapse = durationMs < thresholdMs;
+  // Fail open: never hide a track without a confirmed duration; "off" mode disables filtering
+  const shouldFilter = durationMs != null && durationMs < thresholdMs && mode !== 'off';
+
   const isCollapsed = element.classList.contains('scf-collapsed');
+  const isRemoved = element.classList.contains('scf-removed');
 
-  if (shouldCollapse && !isCollapsed) {
-    // Save original content before replacing
-    element.dataset.scfOriginal = element.innerHTML;
+  // Restore from a stale filter state (mode changed or track no longer under threshold)
+  if (isCollapsed && (mode !== 'collapse' || !shouldFilter)) {
+    _restoreCollapsed(element);
+  }
+  if (isRemoved && (mode !== 'remove' || !shouldFilter)) {
+    _restoreRemoved(element);
+  }
 
-    // Read metadata from original DOM before replacing it
-    const artistEl = element.querySelector('.soundTitle__username');
-    const titleEl = element.querySelector('.soundTitle__title');
-    const durationEl = element.querySelector('.sc-duration');
-    const artist = artistEl ? artistEl.textContent.trim() : 'Unknown';
-    const title = titleEl ? titleEl.textContent.trim() : 'Unknown';
-    const duration = durationEl ? durationEl.textContent.trim() : formatDuration(durationMs);
+  if (!shouldFilter) return;
 
-    element.innerHTML = `
-      <div class="scf-placeholder">
-        <span class="scf-info">
-          <span class="scf-play-icon">▶</span>
-          <span class="scf-meta">${escapeHtml(artist)} — ${escapeHtml(title)}</span>
-          <span class="scf-duration">${escapeHtml(duration)}</span>
-        </span>
-        <button class="scf-show-btn" type="button">show</button>
-      </div>
-    `;
-    element.classList.add('scf-collapsed');
+  if (mode === 'collapse' && !element.classList.contains('scf-collapsed')) {
+    _collapse(element, durationMs);
+  } else if (mode === 'remove' && !element.classList.contains('scf-removed')) {
+    element.style.display = 'none';
+    element.classList.add('scf-removed');
+  }
+}
 
-    // "Show" button: reveal track and prevent re-collapse
-    element.querySelector('.scf-show-btn').addEventListener('click', (e) => {
-      e.stopPropagation();
-      element.innerHTML = element.dataset.scfOriginal;
-      element.classList.remove('scf-collapsed');
-      element.classList.add('scf-shown');
-      delete element.dataset.scfOriginal;
-    });
+function _restoreCollapsed(element) {
+  if (!element.classList.contains('scf-collapsed')) return;
+  element.innerHTML = element.dataset.scfOriginal;
+  element.classList.remove('scf-collapsed');
+  delete element.dataset.scfOriginal;
+}
 
-  } else if (!shouldCollapse && isCollapsed) {
-    // Restore original content when threshold drops below track duration
+function _restoreRemoved(element) {
+  if (!element.classList.contains('scf-removed')) return;
+  element.style.display = '';
+  element.classList.remove('scf-removed');
+}
+
+function _collapse(element, durationMs) {
+  element.dataset.scfOriginal = element.innerHTML;
+
+  const artistEl = element.querySelector('.soundTitle__username');
+  const titleEl = element.querySelector('.soundTitle__title');
+  const durationEl = element.querySelector('.sc-duration');
+  const artist = artistEl ? artistEl.textContent.trim() : 'Unknown';
+  const title = titleEl ? titleEl.textContent.trim() : 'Unknown';
+  const duration = durationEl ? durationEl.textContent.trim() : formatDuration(durationMs);
+
+  element.innerHTML = `
+    <div class="scf-placeholder">
+      <span class="scf-info">
+        <span class="scf-play-icon">▶</span>
+        <span class="scf-meta">${escapeHtml(artist)} — ${escapeHtml(title)}</span>
+        <span class="scf-duration">${escapeHtml(duration)}</span>
+      </span>
+      <button class="scf-show-btn" type="button">show</button>
+    </div>
+  `;
+  element.classList.add('scf-collapsed');
+
+  element.querySelector('.scf-show-btn').addEventListener('click', (e) => {
+    e.stopPropagation();
     element.innerHTML = element.dataset.scfOriginal;
     element.classList.remove('scf-collapsed');
+    element.classList.add('scf-shown');
     delete element.dataset.scfOriginal;
-  }
+  });
 }
 
 function formatDuration(ms) {
