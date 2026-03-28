@@ -2,6 +2,7 @@
   const STORAGE_KEY_THRESHOLD = 'minDurationMinutes';
   const STORAGE_KEY_POSITION = 'widgetPosition';
   const STORAGE_KEY_MODE = 'filterMode';
+  const STORAGE_KEY_HIDE_PLAYLISTS = 'hidePlaylists';
   const DEFAULT_THRESHOLD = 5;
   const DEFAULT_MODE = 'collapse';
 
@@ -21,6 +22,11 @@
         <option value="off">Off</option>
       </select>
     </div>
+    <div class="scf-check-row">
+      <label class="scf-check-label">
+        <input type="checkbox" id="scf-hide-playlists"> Hide playlists
+      </label>
+    </div>
     <div class="scf-count" id="scf-count"></div>
   `;
   const target = document.body ?? document.documentElement;
@@ -30,14 +36,16 @@
   const valueLabel = document.getElementById('scf-value');
   const countLabel = document.getElementById('scf-count');
   const modeSelect = document.getElementById('scf-mode');
+  const hidePlaylistsCheck = document.getElementById('scf-hide-playlists');
 
   // Load persisted threshold, mode, and position
-  chrome.storage.local.get([STORAGE_KEY_THRESHOLD, STORAGE_KEY_MODE, STORAGE_KEY_POSITION], (result) => {
+  chrome.storage.local.get([STORAGE_KEY_THRESHOLD, STORAGE_KEY_MODE, STORAGE_KEY_HIDE_PLAYLISTS, STORAGE_KEY_POSITION], (result) => {
     const threshold = result[STORAGE_KEY_THRESHOLD] ?? DEFAULT_THRESHOLD;
     slider.value = threshold;
     valueLabel.textContent = `${threshold}m`;
 
     modeSelect.value = result[STORAGE_KEY_MODE] ?? DEFAULT_MODE;
+    hidePlaylistsCheck.checked = result[STORAGE_KEY_HIDE_PLAYLISTS] ?? false;
 
     const pos = result[STORAGE_KEY_POSITION];
     if (pos) {
@@ -58,6 +66,11 @@
   // Persist mode on change; content.js reacts via storage.onChanged
   modeSelect.addEventListener('change', () => {
     chrome.storage.local.set({ [STORAGE_KEY_MODE]: modeSelect.value });
+  });
+
+  // Persist hide-playlists on change; content.js reacts via storage.onChanged
+  hidePlaylistsCheck.addEventListener('change', () => {
+    chrome.storage.local.set({ [STORAGE_KEY_HIDE_PLAYLISTS]: hidePlaylistsCheck.checked });
   });
 
   // Receive hidden track count from content.js

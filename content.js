@@ -1,6 +1,7 @@
 (function () {
   const STORAGE_KEY = 'minDurationMinutes';
   const STORAGE_KEY_MODE = 'filterMode';
+  const STORAGE_KEY_HIDE_PLAYLISTS = 'hidePlaylists';
   const DEFAULT_THRESHOLD_MIN = 5;
   const DEFAULT_MODE = 'collapse';
   const FEED_SELECTOR = '#content .lazyLoadingList';
@@ -11,24 +12,23 @@
   const durationMap = new Map(); // permalink path (string) → durationMs
   let thresholdMs = DEFAULT_THRESHOLD_MIN * 60_000;
   let filterMode = DEFAULT_MODE;
+  let hidePlaylists = false;
   let activeObserver = null;
 
-  // Load persisted threshold and mode on startup
-  chrome.storage.local.get([STORAGE_KEY, STORAGE_KEY_MODE], (result) => {
+  // Load persisted settings on startup
+  chrome.storage.local.get([STORAGE_KEY, STORAGE_KEY_MODE, STORAGE_KEY_HIDE_PLAYLISTS], (result) => {
     thresholdMs = (result[STORAGE_KEY] ?? DEFAULT_THRESHOLD_MIN) * 60_000;
     filterMode = result[STORAGE_KEY_MODE] ?? DEFAULT_MODE;
+    hidePlaylists = result[STORAGE_KEY_HIDE_PLAYLISTS] ?? false;
     applyFilterToAll();
   });
 
-  // Re-filter when user moves the slider or changes mode (widget.js writes to storage)
+  // Re-filter when settings change (widget.js writes to storage)
   chrome.storage.onChanged.addListener((changes) => {
-    if (changes[STORAGE_KEY]) {
-      thresholdMs = changes[STORAGE_KEY].newValue * 60_000;
-    }
-    if (changes[STORAGE_KEY_MODE]) {
-      filterMode = changes[STORAGE_KEY_MODE].newValue;
-    }
-    if (changes[STORAGE_KEY] || changes[STORAGE_KEY_MODE]) {
+    if (changes[STORAGE_KEY]) thresholdMs = changes[STORAGE_KEY].newValue * 60_000;
+    if (changes[STORAGE_KEY_MODE]) filterMode = changes[STORAGE_KEY_MODE].newValue;
+    if (changes[STORAGE_KEY_HIDE_PLAYLISTS]) hidePlaylists = changes[STORAGE_KEY_HIDE_PLAYLISTS].newValue;
+    if (changes[STORAGE_KEY] || changes[STORAGE_KEY_MODE] || changes[STORAGE_KEY_HIDE_PLAYLISTS]) {
       applyFilterToAll();
     }
   });
@@ -79,7 +79,20 @@
     const permalink = getTrackPermalink(node) ?? node.dataset.scfPermalink ?? null;
     if (permalink == null) return;
     node.dataset.scfPermalink = permalink; // cache so it survives DOM replacement
-    // applyFilter is defined in filter.js, which is loaded before content.js (see manifest.json)
+
+    // Playlist filtering (identified by /sets/ in permalink)
+    if (permalink.includes('/sets/')) {
+      if (hidePlaylists) {
+        node.style.display = 'none';
+        node.classList.add('scf-playlist-hidden');
+      } else if (node.classList.contains('scf-playlist-hidden')) {
+        node.style.display = '';
+        node.classList.remove('scf-playlist-hidden');
+      }
+      return; // don't apply duration filter to playlists
+    }
+
+    // Duration filtering (applyFilter is defined in filter.js)
     applyFilter(node, durationMap.get(permalink), thresholdMs, filterMode);
   }
 

@@ -119,6 +119,27 @@
   margin-top: 8px;
 }
 
+.scf-check-row {
+  margin-top: 8px;
+}
+
+.scf-check-label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #aaa;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.scf-check-label input[type="checkbox"] {
+  accent-color: #ff5500;
+  cursor: pointer;
+  width: 13px;
+  height: 13px;
+  flex-shrink: 0;
+}
+
 .scf-mode {
   width: 100%;
   background: #1a1a1a;
