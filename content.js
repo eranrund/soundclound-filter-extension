@@ -75,8 +75,10 @@
   }
 
   function filterNode(node) {
-    const permalink = getTrackPermalink(node);
+    // Use cached permalink when DOM has been replaced (e.g. track is collapsed)
+    const permalink = getTrackPermalink(node) ?? node.dataset.scfPermalink ?? null;
     if (permalink == null) return;
+    node.dataset.scfPermalink = permalink; // cache so it survives DOM replacement
     // applyFilter is defined in filter.js, which is loaded before content.js (see manifest.json)
     applyFilter(node, durationMap.get(permalink), thresholdMs, filterMode);
   }
