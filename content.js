@@ -116,11 +116,20 @@
     window.dispatchEvent(new CustomEvent('scf:count', { detail: { count } }));
   }
 
-  setupObserver(MAX_RETRIES);
+  if (location.pathname.startsWith('/feed')) {
+    setupObserver(MAX_RETRIES);
+  }
 
-  // Disconnect observer when navigating away from /feed (SoundCloud is an SPA)
+  // Handle SPA navigation: set up or tear down observer as user moves to/from /feed
   window.navigation?.addEventListener('navigate', (event) => {
-    if (!event.destination.url.includes('/feed')) {
+    const onFeed = new URL(event.destination.url).pathname.startsWith('/feed');
+    if (onFeed) {
+      // Wait for the new page content to render before observing
+      setTimeout(() => {
+        durationMap.clear();
+        setupObserver(MAX_RETRIES);
+      }, 0);
+    } else {
       activeObserver?.disconnect();
       activeObserver = null;
     }

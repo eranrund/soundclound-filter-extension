@@ -6,6 +6,10 @@
   const DEFAULT_THRESHOLD = 5;
   const DEFAULT_MODE = 'collapse';
 
+  function isOnFeed() {
+    return location.pathname.startsWith('/feed');
+  }
+
   const widget = document.createElement('div');
   widget.className = 'scf-widget';
   widget.id = 'scf-widget';
@@ -29,8 +33,14 @@
     </div>
     <div class="scf-count" id="scf-count"></div>
   `;
+  widget.style.display = isOnFeed() ? '' : 'none';
   const target = document.body ?? document.documentElement;
   target.appendChild(widget);
+
+  window.navigation?.addEventListener('navigate', (event) => {
+    const onFeed = new URL(event.destination.url).pathname.startsWith('/feed');
+    widget.style.display = onFeed ? '' : 'none';
+  });
 
   const slider = document.getElementById('scf-slider');
   const valueLabel = document.getElementById('scf-value');

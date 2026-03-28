@@ -15,13 +15,13 @@
   ],
   "content_scripts": [
     {
-      "matches": ["https://soundcloud.com/feed*"],
+      "matches": ["https://soundcloud.com/*"],
       "js": ["interceptor.js"],
       "world": "MAIN",
       "run_at": "document_start"
     },
     {
-      "matches": ["https://soundcloud.com/feed*"],
+      "matches": ["https://soundcloud.com/*"],
       "js": ["filter.js", "widget.js", "content.js"],
       "css": ["widget.css"],
       "run_at": "document_idle"
